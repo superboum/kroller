@@ -9,25 +9,21 @@ function Page(link,world) {
     this.body = null;
 }
 
-Page.prototype.fetchContent = function(cb) {
+Page.prototype.crawl = function() {
     request(this.url, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             this.body = body;
             this.findChildren();
-            cb(null);
-        } else {
-            cb(error || "Page status was not 200 :(");
         }
+        this.world.watcher.emit('PageCrawled',this);
     }.bind(this));
 };
 
 Page.prototype.findChildren = function() {
     links = this.parseContent();
-    pages = [];
     links.forEach(function(l) {
-        pages.push(this.world.lookup(l));
-    });
-    return pages;
+        this.children.push(this.world.lookup(l));
+    }.bind(this));
 }
 
 Page.prototype.parseContent = function() {
@@ -56,6 +52,11 @@ Page.prototype.beautifyLink = function(rawLink) {
     if (/https?:\/\//i.exec(rawLink)) {
         return rawLink;
     }
+
+    if (rawLink.substring(0,2) == '//') {
+      return 'https:' + rawLink;
+    }
+
     if (rawLink.substring(0,1) == '/') {
         return this.baseUrl() + rawLink;
     }
@@ -76,14 +77,6 @@ Page.prototype.urlDir = function() {
 
 Page.prototype.baseUrl = function() {
     return /https?:\/\/([\w\d-_.]*)/i.exec(this.url)[0];
-};
-
-Page.prototype.crawl = function() {
-    this.fetchContent(function(err,links) {
-        //@TODO generate children
-        console.log(links);
-        this.world.watcher.emit('PageCrawled',this);
-    }.bind(this));
 };
 
 module.exports = Page;
