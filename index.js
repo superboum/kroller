@@ -6,10 +6,11 @@ winston.remove(winston.transports.Console);
 winston.add(winston.transports.Console, {
     colorize:true
 });
-winston.level = 'debug';
+//silly,debug,verbose,info,warn,error
+winston.level = 'verbose';
 
 winston.info("Kroller is now started");
-w = new World(5);
+w = new World(3);
 
 var rl = readline.createInterface({
     input: process.stdin,
@@ -23,4 +24,8 @@ rl.on('line', function(line){
 
 rl.on('close', function(){
     winston.info("Every websites are now referenced");
+})
+
+w.watcher.on('AllPageCrawled', function() {
+    console.log('the end');
 })

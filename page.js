@@ -1,4 +1,3 @@
-var request = require('request');
 var winston = require('winston');
 
 function Page(link,world) {
@@ -7,22 +6,31 @@ function Page(link,world) {
     this.depth = 0;
     this.children = [];
     this.body = null;
+    this.crawled = false;
+    this.banned = ['mp4','mp3','css','js','wav','flv','swf','jpg','jpeg','png','pdf']
 }
 
-Page.prototype.crawl = function() {
-    request(this.url, function (error, response, body) {
-        if (!error && response.statusCode == 200) {
+Page.prototype.crawl = function() { 
+    this.world.queue.push(this.url, function(error,response,body) {
+        if (error) {
+            winston.warn("Can't crawl the website "+this.url+" with error "+error);
+        } else if(response.statusCode == 404) {
+            winston.warn("Page not found "+this.url);
+        } else {
             this.body = body;
             this.findChildren();
         }
-        this.world.watcher.emit('PageCrawled',this);
+        this.crawled=true;
+        this.world.watcher.emit('OnePageCrawled',this);
     }.bind(this));
 };
 
 Page.prototype.findChildren = function() {
     links = this.parseContent();
     links.forEach(function(l) {
-        this.children.push(this.world.lookup(l));
+        p = this.world.lookup(l);
+        p.depth = this.depth+1;
+        this.children.push(p);
     }.bind(this));
 }
 
@@ -48,6 +56,13 @@ Page.prototype.beautifyLink = function(rawLink) {
     }
 
     rawLink = rawLink.split("#",1)[0]
+    extensionRawLink = rawLink.split("?",1)[0]
+   
+    ext = (extensionRawLink.split(".").slice(-1))[0]
+
+    if(this.banned.indexOf(ext.toLowerCase()) != -1) {
+        return null;
+    }
 
     if (/https?:\/\//i.exec(rawLink)) {
         return rawLink;
@@ -60,19 +75,11 @@ Page.prototype.beautifyLink = function(rawLink) {
     if (rawLink.substring(0,1) == '/') {
         return this.baseUrl() + rawLink;
     }
-    return this.urlDir() + rawLink;
+    return this.urlDir() + '/' + rawLink;
 }
 
 Page.prototype.urlDir = function() {
-    urlDir = this.url
-    while(urlDir.length > 0 && urlDir.charAt[urlDir.length-1] != '/') {
-        urlDir = urlDir.slice(0,-1);
-    }
-
-    if (urlDir.length === 0) {
-        return this.url + '/';
-    }
-    return urlDir;
+    return /^(https?:\/\/.*?)(\/[^\/]*)?$/gi.exec(this.url)[1];
 }
 
 Page.prototype.baseUrl = function() {

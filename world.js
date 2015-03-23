@@ -1,22 +1,42 @@
 var winston = require('winston');
 var Page = require('./page');
+var async = require("async");
 var events = require('events');
+var request = require('request');
+
+var fetch = function(url,cb) {
+    request({
+        url: url,
+        timeout: 10000
+    }, function (error, response, body) {
+        cb(error,response,body);
+    });
+};
+
 
 function World(depth) {
     this.maxDepth = depth;
     this.pages = [];
-    this.crawled = 0;
     this.watcher = new events.EventEmitter();
-    this.watcher.on('PageCrawled', this.pageCrawled);
+    this.watcher.on('OnePageCrawled', this.onePageCrawled);
     winston.debug("Creating a new world");
+    this.queue = async.queue(fetch, 1);
+
+    this.queue.drain = function() {
+        console.log('Finished, websites found: '+this.pages.length);
+    }.bind(this);
 }
 
-World.prototype.pageCrawled = function(page) {
-    winston.verbose("We have crawled a page "+page.url);
-    if(page.depth < this.maxDepth) {
-        page.crawlChildren();
+World.prototype.onePageCrawled = function(page) {
+    var w = page.world;
+    winston.verbose("Fetched "+page.url);
+    if(page.depth < w.maxDepth) {
+        page.children.forEach(function(p) {
+            p.crawl();
+        });
     }
-}
+};
+
 
 /**
  * Inform the world that we want to use this website
