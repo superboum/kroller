@@ -7,7 +7,7 @@ var request = require('request');
 var fetch = function(url,cb) {
     request({
         url: url,
-        timeout: 10000
+        //timeout: 10000
     }, function (error, response, body) {
         cb(error,response,body);
     });

@@ -47,7 +47,12 @@ Page.prototype.parseContent = function() {
 
 Page.prototype.beautifyLink = function(rawLink) {
     if(rawLink.substring(0,7) === 'mailto:') {
-        winston.debug("Ignoring mailto address "+rawLink);
+        winston.debug("Ignoring email "+rawLink);
+        return null;
+    }
+    
+    if(rawLink.substring(0,6) === 'skype:') {
+        winston.debug("Ignoring skype "+rawLink);
         return null;
     }
 
@@ -75,6 +80,11 @@ Page.prototype.beautifyLink = function(rawLink) {
     if (rawLink.substring(0,1) == '/') {
         return this.baseUrl() + rawLink;
     }
+    
+    if (rawLink.substring(0,2) == './') {
+        return this.baseUrl() + '/' + rawLink.substring(2);
+    }
+
     return this.urlDir() + '/' + rawLink;
 }
 
