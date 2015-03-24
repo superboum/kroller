@@ -3,10 +3,11 @@ var World = require('./world');
 var winston = require('winston');
 
 winston.remove(winston.transports.Console);
-winston.add(winston.transports.Console, {
-    colorize:true,
-    debugStdout: false
-});
+//winston.add(winston.transports.Console, {
+    //colorize:true,
+//});
+winston.add(winston.transports.File, { filename: 'kroller.log' });
+
 //silly,debug,verbose,info,warn,error
 winston.level = 'verbose';
 
