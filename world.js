@@ -9,24 +9,24 @@ var Website = require('./website');
 var fetch = function(url,cb) {
     request({
         url: url,
-        //timeout: 10000
+        timeout: 10000
     }, function (error, response, body) {
         cb(error,response,body);
     });
 };
 
 
-function World(depth) {
+function World(depth,concurrency) {
     this.maxDepth = depth;
+    this.hideNotLinked = true;
     this.pages = [];
     this.websites = [];
     this.watcher = new events.EventEmitter();
     this.watcher.on('OnePageCrawled', this.onePageCrawled);
     winston.debug("Creating a new world");
-    this.queue = async.queue(fetch, 100);
+    this.queue = async.queue(fetch, concurrency);
 
     this.queue.drain = function() {
-        winston.info('Finished. Pages found: '+this.pages.length+'. Websites found:  '+this.websites.length);
         this.watcher.emit('AllPageCrawled');
     }.bind(this);
 }
