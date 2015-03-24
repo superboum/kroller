@@ -59,7 +59,7 @@ World.prototype.lookup = function(url) {
         var website = this.findWebsite(page.baseUrl());
 
         if (website === null) {
-            website = new Website(page.baseUrl(),this);
+            website = new Website(page.baseUrl(),this, this.websites.length);
             this.websites.push(website);
         }
 
@@ -115,9 +115,13 @@ World.prototype.generateGexf = function() {
     footer = '</gexf>';
 
     this.websites.forEach(function(w,i) {
-       nodes += '<node id="'+i+'" label="'+w.url+'">';
-       nodes += '<attvalues><attvalue for="0" value="Noeud "'+i+' /><attvalue for="1" value="'+w.url+'"/><attvalue for="2" value="'+w.children.length+'"/></attvalues>'
-       nodes += '</node>'
+        nodes += '<node id="'+i+'" label="'+w.url+'">';
+        nodes += '<attvalues><attvalue for="0" value="Noeud '+i+'" /><attvalue for="1" value="'+w.url+'"/><attvalue for="2" value="'+w.children.length+'"/></attvalues>'
+        nodes += '</node>'
+
+        w.children.forEach(function(wchild,j) {
+            edges += '<edge id="n'+i+'c'+j+'" source="'+w.id+'" target="'+wchild.id+'" />';
+        });
     });
     nodes += '</nodes>';
     edges += '</edges>'
