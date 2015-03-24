@@ -11,6 +11,8 @@ function Page(link,world) {
 }
 
 Page.prototype.crawl = function() { 
+    this.depth++;
+    this.crawled = true;
     this.world.queue.push(this.url, function(error,response,body) {
         if (error) {
             winston.warn("Can't crawl the website "+this.url+" with error "+error);
@@ -20,7 +22,6 @@ Page.prototype.crawl = function() {
             this.body = body;
             this.findChildren();
         }
-        this.crawled=true;
         this.world.watcher.emit('OnePageCrawled',this);
     }.bind(this));
 };
@@ -29,7 +30,7 @@ Page.prototype.findChildren = function() {
     links = this.parseContent();
     links.forEach(function(l) {
         p = this.world.lookup(l);
-        p.depth = this.depth+1;
+        p.depth = this.depth;
         this.children.push(p);
     }.bind(this));
 }

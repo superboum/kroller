@@ -20,7 +20,7 @@ function World(depth) {
     this.watcher = new events.EventEmitter();
     this.watcher.on('OnePageCrawled', this.onePageCrawled);
     winston.debug("Creating a new world");
-    this.queue = async.queue(fetch, 1);
+    this.queue = async.queue(fetch, 100);
 
     this.queue.drain = function() {
         console.log('Finished, websites found: '+this.pages.length);
@@ -29,10 +29,11 @@ function World(depth) {
 
 World.prototype.onePageCrawled = function(page) {
     var w = page.world;
-    winston.verbose("Fetched "+page.url);
+    winston.verbose("Fetched "+page.url+" depth "+page.depth);
     if(page.depth < w.maxDepth) {
         page.children.forEach(function(p) {
-            p.crawl();
+            if(!p.crawled)
+                p.crawl();
         });
     }
 };
