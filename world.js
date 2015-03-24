@@ -1,8 +1,10 @@
 var winston = require('winston');
-var Page = require('./page');
 var async = require("async");
 var events = require('events');
 var request = require('request');
+
+var Page = require('./page');
+var Website = require('./website');
 
 var fetch = function(url,cb) {
     request({
@@ -17,13 +19,15 @@ var fetch = function(url,cb) {
 function World(depth) {
     this.maxDepth = depth;
     this.pages = [];
+    this.websites = [];
     this.watcher = new events.EventEmitter();
     this.watcher.on('OnePageCrawled', this.onePageCrawled);
     winston.debug("Creating a new world");
     this.queue = async.queue(fetch, 100);
 
     this.queue.drain = function() {
-        console.log('Finished, websites found: '+this.pages.length);
+        winston.info('Finished. Pages found: '+this.pages.length+'. Websites found:  '+this.websites.length);
+        this.watcher.emit('AllPageCrawled');
     }.bind(this);
 }
 
@@ -51,8 +55,18 @@ World.prototype.lookup = function(url) {
 
     if (page === null) {
         page = new Page(url,this);
+
+        var website = this.findWebsite(page.baseUrl());
+
+        if (website === null) {
+            website = new Website(page.baseUrl(),this);
+            this.websites.push(website);
+        }
+
+        website.addPage(page);
+
         this.pages.push(page);
-        winston.debug("This website is new in our world "+url);
+        winston.debug("This page is new in our world "+url);
     }
     return page;
 };
@@ -69,12 +83,45 @@ World.prototype.findPage = function(url) {
     this.pages.every(function(page, index) {
         if (url === page.url) {
             r = page;
+            winston.debug("This page is already in our world "+url);
+            return false;
+        }
+        return true;
+    });
+    return r;
+}
+
+World.prototype.findWebsite = function(url) {
+    r = null;
+    this.websites.every(function(website, index) {
+        if (url === website.url) {
+            r = website;
             winston.debug("This website is already in our world "+url);
             return false;
         }
         return true;
     });
     return r;
+}
+
+World.prototype.generateGexf = function() {
+    head = '<gexf xmlns="http://www.gexf.net/1.1draft" xmlns:viz="http://www.gexf.net/1.1draft/viz" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.1" xsi:schemaLocation="http://www.gexf.net/1.1draft http://www.gexf.net/1.1draft/gexf.xsd">';
+    meta = '<meta lastmodifieddate="2015-03-02 17:13:56 +0100"><creator>Kroller</creator><description>Kroll the web with kroller with a big K</description></meta>';
+    graph = '<graph defaultedgetype="directed">';
+    graph += '<attributes class="node"> <attribute id="0" title="name" type="string"/><attribute id="1" title="url" type="string"/><attribute id="2" title="links" type="int"/> <attribute id="3" title="actor" type="string"> <default>default_actor</default> </attribute> </attributes>';
+    nodes = '<nodes>';
+    edges = '<edges>';
+    graphEnd = '</graph>'
+    footer = '</gexf>';
+
+    this.websites.forEach(function(w,i) {
+       nodes += '<node id="'+i+'" label="'+w.url+'">';
+       nodes += '<attvalues><attvalue for="0" value="Noeud "'+i+' /><attvalue for="1" value="'+w.url+'"/><attvalue for="2" value="'+w.children.length+'"/></attvalues>'
+       nodes += '</node>'
+    });
+    nodes += '</nodes>';
+    edges += '</edges>'
+    return head + meta + graph + nodes + edges + graphEnd + footer;
 }
 
 module.exports = World

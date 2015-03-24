@@ -7,6 +7,7 @@ function Page(link,world) {
     this.children = [];
     this.body = null;
     this.crawled = false;
+    this.website = null;
     this.banned = ['mp4','mp3','css','js','wav','flv','swf','jpg','jpeg','png','pdf']
 }
 
@@ -33,6 +34,7 @@ Page.prototype.findChildren = function() {
         p.depth = this.depth;
         this.children.push(p);
     }.bind(this));
+    this.website.informChildren(this);
 }
 
 Page.prototype.parseContent = function() {

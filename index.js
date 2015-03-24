@@ -4,13 +4,14 @@ var winston = require('winston');
 
 winston.remove(winston.transports.Console);
 winston.add(winston.transports.Console, {
-    colorize:true
+    colorize:true,
+    debugStdout: false
 });
 //silly,debug,verbose,info,warn,error
 winston.level = 'verbose';
 
 winston.info("Kroller is now started");
-w = new World(3);
+w = new World(2);
 
 var rl = readline.createInterface({
     input: process.stdin,
@@ -27,5 +28,5 @@ rl.on('close', function(){
 })
 
 w.watcher.on('AllPageCrawled', function() {
-    console.log('the end');
+    console.log(w.generateGexf());
 })
