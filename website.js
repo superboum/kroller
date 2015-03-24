@@ -15,7 +15,7 @@ Website.prototype.addPage = function(p) {
 
 Website.prototype.informChildren = function(p) {
     p.children.forEach(function(p) {
-        website = this.world.findWebsite(p.baseUrl());
+        website = this.world.findWebsite(p.prettyUrl());
         if (website.url === this.url || this.alreadyRegistered(website)) { 
             return;
         }

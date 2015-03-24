@@ -56,10 +56,10 @@ World.prototype.lookup = function(url) {
     if (page === null) {
         page = new Page(url,this);
 
-        var website = this.findWebsite(page.baseUrl());
+        var website = this.findWebsite(page.prettyUrl());
 
         if (website === null) {
-            website = new Website(page.baseUrl(),this, this.websites.length);
+            website = new Website(page.prettyUrl(),this, this.websites.length);
             this.websites.push(website);
         }
 

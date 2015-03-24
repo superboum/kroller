@@ -11,7 +11,7 @@ winston.add(winston.transports.Console, {
 winston.level = 'verbose';
 
 winston.info("Kroller is now started");
-w = new World(1);
+w = new World(2);
 
 var rl = readline.createInterface({
     input: process.stdin,

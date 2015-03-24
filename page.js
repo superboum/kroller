@@ -99,4 +99,8 @@ Page.prototype.baseUrl = function() {
     return /https?:\/\/([\w\d-_.]*)/i.exec(this.url)[0];
 };
 
+Page.prototype.prettyUrl = function() {
+    return /https?:\/\/([\w\d-_.]*)/i.exec(this.url)[1];
+};
+
 module.exports = Page;
