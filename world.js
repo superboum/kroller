@@ -9,14 +9,16 @@ var Website = require('./website');
 var fetch = function(url,cb) {
     request({
         url: url,
-        timeout: 10000
+        timeout: this.timeout
     }, function (error, response, body) {
-        cb(error,response,body);
-    });
+        if(!this.aborted)
+            cb(error,response,body);
+    }.bind(this));
 };
 
 
-function World(depth,concurrency) {
+function World(depth,concurrency,timeout) {
+    this.timeout = timeout;
     this.maxDepth = depth;
     this.hideNotLinked = true;
     this.pages = [];
@@ -24,7 +26,7 @@ function World(depth,concurrency) {
     this.watcher = new events.EventEmitter();
     this.watcher.on('OnePageCrawled', this.onePageCrawled);
     winston.debug("Creating a new world");
-    this.queue = async.queue(fetch, concurrency);
+    this.queue = async.queue(fetch.bind(this), concurrency);
 
     this.queue.drain = function() {
         this.watcher.emit('AllPageCrawled');
@@ -126,6 +128,11 @@ World.prototype.generateGexf = function() {
     nodes += '</nodes>';
     edges += '</edges>'
     return head + meta + graph + nodes + edges + graphEnd + footer;
+}
+
+World.prototype.stop = function() {
+    this.queue.kill();   // avoid any work to be added
+    this.aborted = true; // tell the world to abort any started work
 }
 
 module.exports = World
