@@ -13,16 +13,15 @@ winston.add(winston.transports.Console, {
 });
 
 winston.level = 'info';
-var depth = 1;
-var concurrency = 100;
 
 program
-  .version('0.0.1')
+  .version(require("./package.json").version)
   .usage('[option]')
   .option('-i, --input [file]', 'A file containing one website per line (required)')
   .option('-o, --output [file]', 'Where to store gexf file (required)')
   .option('-d, --depth <n>', 'Crawl depth, default 1')
-  .option('-c, --concurrency <n>', 'Concurrent requests allowed, default 100.')
+  .option('-c, --concurrency <n>', 'Concurrent requests allowed, default 100')
+  .option('-t, --timeout <n>', 'Page timeout in ms, default 10000')
   .option('-v, --verbose', 'Verbosity', function(v,total) { return total+1;  }, 0 )
   .parse(process.argv);
 
@@ -36,10 +35,11 @@ if(!program.input || !program.output) {
   process.exit(1);
 }
 
-if(program.concurrency) concurrency = program.concurrency;
-if(program.depth) depth = program.depth;
+var concurrency = +(program.concurrency || 1);
+var depth       = +(program.depth       || 100);
+var timeout     = +(program.timeout     || 10000);
 
-w = new World(depth,concurrency);
+w = new World(depth,concurrency,timeout);
 
 fs.readFile(program.input, "utf8", function(error, data) {
   if(error || !data) {
@@ -47,7 +47,7 @@ fs.readFile(program.input, "utf8", function(error, data) {
     process.exit(1);
   }
   
-  winston.info("Kroller is now started with depth="+depth+" and concurrency="+concurrency);
+  winston.info("Kroller is now started with depth="+depth+", concurrency="+concurrency+" and timeout="+timeout);
   data = data.split("\n");
   data.pop(); //Dirty hack, sorry :s
   data.forEach(function(line) {

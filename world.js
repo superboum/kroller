@@ -9,14 +9,15 @@ var Website = require('./website');
 var fetch = function(url,cb) {
     request({
         url: url,
-        timeout: 10000
+        timeout: this.timeout
     }, function (error, response, body) {
         cb(error,response,body);
     });
 };
 
 
-function World(depth,concurrency) {
+function World(depth,concurrency,timeout) {
+    this.timeout = timeout;
     this.maxDepth = depth;
     this.hideNotLinked = true;
     this.pages = [];
@@ -24,7 +25,7 @@ function World(depth,concurrency) {
     this.watcher = new events.EventEmitter();
     this.watcher.on('OnePageCrawled', this.onePageCrawled);
     winston.debug("Creating a new world");
-    this.queue = async.queue(fetch, concurrency);
+    this.queue = async.queue(fetch.bind(this), concurrency);
 
     this.queue.drain = function() {
         this.watcher.emit('AllPageCrawled');
