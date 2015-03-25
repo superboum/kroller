@@ -35,8 +35,8 @@ if(!program.input || !program.output) {
   process.exit(1);
 }
 
-var concurrency = +(program.concurrency || 1);
-var depth       = +(program.depth       || 100);
+var concurrency = +(program.concurrency || 100);
+var depth       = +(program.depth       || 1);
 var timeout     = +(program.timeout     || 10000);
 
 w = new World(depth,concurrency,timeout);
@@ -55,7 +55,7 @@ fs.readFile(program.input, "utf8", function(error, data) {
   });
 });
 
-w.watcher.on('AllPageCrawled', function() {
+function writeFile() {
   winston.info('Finished. Pages found: '+w.pages.length+'. Websites found:  '+w.websites.length);
   winston.info('Writing your GEXF file...');
   fs.writeFile(program.output, w.generateGexf(), function(err) {
@@ -64,5 +64,17 @@ w.watcher.on('AllPageCrawled', function() {
     } else {
       winston.info("You can now open your file "+program.output+" in Gephi ! Bye :)");
     }
+    process.exit();
   });
-})
+}
+
+process.on('SIGINT', function() {
+  winston.warn("Aborting...");
+  w.stop();
+  writeFile();
+});
+
+w.watcher.on('AllPageCrawled', function() {
+  winston.info("End of crawl!");
+  writeFile();
+});

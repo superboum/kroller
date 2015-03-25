@@ -11,8 +11,9 @@ var fetch = function(url,cb) {
         url: url,
         timeout: this.timeout
     }, function (error, response, body) {
-        cb(error,response,body);
-    });
+        if(!this.aborted)
+            cb(error,response,body);
+    }.bind(this));
 };
 
 
@@ -127,6 +128,11 @@ World.prototype.generateGexf = function() {
     nodes += '</nodes>';
     edges += '</edges>'
     return head + meta + graph + nodes + edges + graphEnd + footer;
+}
+
+World.prototype.stop = function() {
+    this.queue.kill();   // avoid any work to be added
+    this.aborted = true; // tell the world to abort any started work
 }
 
 module.exports = World
