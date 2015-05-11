@@ -49,6 +49,8 @@ Page.prototype.parseContent = function() {
 };
 
 Page.prototype.beautifyLink = function(rawLink) {
+    //Ignore list
+    
     if(rawLink.substring(0,7) === 'mailto:') {
         winston.debug("Ignoring email "+rawLink);
         return null;
@@ -56,6 +58,11 @@ Page.prototype.beautifyLink = function(rawLink) {
     
     if(rawLink.substring(0,6) === 'skype:') {
         winston.debug("Ignoring skype "+rawLink);
+        return null;
+    }
+    
+    if (rawLink.substring(0,11) === 'javascript:') {
+        winston.debug("Ignoring javascript");
         return null;
     }
 
@@ -71,7 +78,7 @@ Page.prototype.beautifyLink = function(rawLink) {
     if(this.banned.indexOf(ext.toLowerCase()) != -1) {
         return null;
     }
-
+    
     if (/https?:\/\//i.exec(rawLink)) {
         return rawLink;
     }
